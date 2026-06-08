@@ -1,0 +1,20 @@
+[reticulum]
+enable_transport = No
+share_instance = Yes
+shared_instance_port = 37428
+instance_control_port = 37429
+panic_on_interface_error = No
+
+[logging]
+loglevel = 4
+
+[interfaces]
+  [[T-Echo RNode]]
+    type = RNodeInterface
+    enabled = Yes
+    port = /dev/cu.YOUR_TECHO_HERE
+    frequency = 915000000
+    bandwidth = 125000
+    txpower = 17
+    spreadingfactor = 9
+    codingrate = 5

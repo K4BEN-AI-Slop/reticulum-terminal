@@ -1,0 +1,20 @@
+[reticulum]
+enable_transport = No
+share_instance = Yes
+shared_instance_port = 37428
+instance_control_port = 37429
+panic_on_interface_error = No
+
+[logging]
+loglevel = 4
+
+[interfaces]
+  [[Heltec V4 RNode]]
+    type = RNodeInterface
+    enabled = Yes
+    port = /dev/serial/by-id/YOUR_HELTEC_V4_HERE
+    frequency = 915000000
+    bandwidth = 125000
+    txpower = 17
+    spreadingfactor = 9
+    codingrate = 5
