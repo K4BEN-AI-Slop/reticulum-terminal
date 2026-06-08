@@ -81,6 +81,12 @@ scripts/apply_reticulum_config.sh --name "Heltec V4 RNode" --port "/dev/serial/b
 
 # Laptop example
 scripts/apply_reticulum_config.sh --name "T-Echo RNode" --port "/dev/cu.usbmodem2101" --yes
+
+# Auto-detect port (picks first likely serial device)
+scripts/apply_reticulum_config.sh --name "T-Echo RNode" --auto-port --yes
+
+# Auto-detect with preference hint
+scripts/apply_reticulum_config.sh --name "Heltec V4 RNode" --auto-port --prefer "heltec" --yes
 ```
 
 Edit the `port` on each machine:
