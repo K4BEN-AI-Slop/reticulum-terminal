@@ -35,6 +35,27 @@ rnodeconf --autoinstall
 
 If `--autoinstall` fails on T-Echo, use your preferred browser flasher/known-good image and come back.
 
+### T-Echo recovery flow (skip reflashing)
+
+If T-Echo fails with `EEPROM was written, but validation failed`, retry provisioning without rewriting firmware:
+
+```bash
+cd /path/to/reticulum-project
+chmod +x scripts/rnode_recover.sh
+scripts/rnode_recover.sh info /dev/cu.usbmodem2101
+scripts/rnode_recover.sh provision-only /dev/cu.usbmodem2101 techo-17
+```
+
+This uses `rnodeconf --rom` (EEPROM bootstrap only).
+For T-Echo, passing `techo-17` (915-ish) or `techo-16` (470-ish) also avoids a `rnodeconf` crash when EEPROM is blank.
+
+If that still fails, retry with a slower flash speed on a full install:
+
+```bash
+source ~/rns-venv/bin/activate
+rnodeconf --autoinstall --baud-flash 115200 /dev/cu.usbmodem2101
+```
+
 ## 3) Configure Reticulum on each host
 
 Generate defaults once if needed:
@@ -48,6 +69,19 @@ Then copy templates:
 
 - Pi: `config/pi.reticulum.config.example` -> `~/.reticulum/config`
 - Laptop: `config/laptop.reticulum.config.example` -> `~/.reticulum/config`
+
+Or use the helper script to apply the latest tuned profile in one command:
+
+```bash
+cd /path/to/reticulum-project
+chmod +x scripts/apply_reticulum_config.sh
+
+# Pi example
+scripts/apply_reticulum_config.sh --name "Heltec V4 RNode" --port "/dev/serial/by-id/usb-REPLACE_ME" --yes
+
+# Laptop example
+scripts/apply_reticulum_config.sh --name "T-Echo RNode" --port "/dev/cu.usbmodem2101" --yes
+```
 
 Edit the `port` on each machine:
 
@@ -89,6 +123,17 @@ lsof | rg tty
 
 Make sure no serial monitor/Meshtastic process is holding the port.
 
+## Fast demo tuning (higher data rate)
+
+For faster round-trips, use this profile on both nodes:
+
+- `frequency = 915000000`
+- `bandwidth = 125000`
+- `spreadingfactor = 7`
+- `codingrate = 5`
+
+This repo's example configs already use `SF7/BW125/CR5`.
+
 ## 5) Run the rfsh demo
 
 ### On Pi (server side)
@@ -105,8 +150,10 @@ Terminal B:
 ```bash
 source ~/rns-venv/bin/activate
 cd /path/to/reticulum-project
-python3 rfsh_server.py
+python3 rfsh_server.py --announce-idle-interval 3 --announce-connected-interval 20
 ```
+
+The server now announces faster while idle, and backs off once a link is active.
 
 Server prints a destination hash like:
 

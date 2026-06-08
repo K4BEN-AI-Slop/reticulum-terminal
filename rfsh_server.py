@@ -23,8 +23,15 @@ from rfsh_common import (
 
 
 class RfshServer:
-    def __init__(self, announce_interval: int = 30, node_name: str = "ben-pi-rnode", node_site: str = "Arlington Mesh Lab"):
-        self.announce_interval = max(5, announce_interval)
+    def __init__(
+        self,
+        announce_idle_interval: int = 5,
+        announce_connected_interval: int = 30,
+        node_name: str = "ben-pi-rnode",
+        node_site: str = "Arlington Mesh Lab",
+    ):
+        self.announce_idle_interval = max(2, announce_idle_interval)
+        self.announce_connected_interval = max(5, announce_connected_interval)
         self.ctx = CommandContext(node_name=node_name, node_site=node_site)
         self.running = True
         self.links: Dict[bytes, RNS.Link] = {}
@@ -64,6 +71,15 @@ class RfshServer:
             self.links.pop(link.link_id, None)
         self._log(f"Link closed {RNS.prettyhexrep(link.link_id)}")
 
+    def _active_link_count(self) -> int:
+        with self.lock:
+            return len(self.links)
+
+    def _announce_interval(self) -> int:
+        if self._active_link_count() > 0:
+            return self.announce_connected_interval
+        return self.announce_idle_interval
+
     def _send_response(self, link, request_id: str, text: str) -> None:
         chunks = chunk_text(text)
         total_bytes = 0
@@ -96,12 +112,16 @@ class RfshServer:
 
     def announce_loop(self):
         while self.running:
+            interval = self._announce_interval()
             try:
                 self.destination.announce(app_data=make_server_announce_data(self.ctx))
-                self._log(f"announced: {RNS.prettyhexrep(self.destination.hash)}")
+                self._log(
+                    f"announced: {RNS.prettyhexrep(self.destination.hash)} "
+                    f"(interval={interval}s, links={self._active_link_count()})"
+                )
             except Exception as exc:
                 self._log(f"announce failed: {exc}")
-            for _ in range(self.announce_interval):
+            for _ in range(interval):
                 if not self.running:
                     return
                 time.sleep(1)
@@ -121,7 +141,18 @@ class RfshServer:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="RF shell server for Reticulum over RNode")
-    parser.add_argument("--announce-interval", type=int, default=30, help="Server announce interval in seconds")
+    parser.add_argument(
+        "--announce-idle-interval",
+        type=int,
+        default=5,
+        help="Announce interval in seconds when no client links are connected",
+    )
+    parser.add_argument(
+        "--announce-connected-interval",
+        type=int,
+        default=30,
+        help="Announce interval in seconds when at least one client is connected",
+    )
     parser.add_argument("--node-name", default="ben-pi-rnode", help="Node name shown in id/node commands")
     parser.add_argument("--node-site", default="Arlington Mesh Lab", help="Node site shown in id/node commands")
     return parser.parse_args()
@@ -131,7 +162,8 @@ def main():
     args = parse_args()
     RNS.Reticulum()
     server = RfshServer(
-        announce_interval=args.announce_interval,
+        announce_idle_interval=args.announce_idle_interval,
+        announce_connected_interval=args.announce_connected_interval,
         node_name=args.node_name,
         node_site=args.node_site,
     )

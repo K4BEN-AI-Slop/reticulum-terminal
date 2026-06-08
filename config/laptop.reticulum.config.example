@@ -16,5 +16,5 @@ loglevel = 4
     frequency = 915000000
     bandwidth = 125000
     txpower = 17
-    spreadingfactor = 9
+    spreadingfactor = 7
     codingrate = 5
