@@ -1,0 +1,13 @@
+!doctype html
+%main
+  %h1 uugnet mesh pages
+  %p super tiny site server using hand-written .msh files.
+  %p
+    %a(href="/wiki/") open the wiki
+  %ul
+    %li
+      %a(href="/wiki/rf-notes") rf notes
+    %li
+      %a(href="/scratchpad") scratchpad (create scratchpad.msh)
+  %p(class="muted") tip: urls without extension will resolve to .msh files.
+

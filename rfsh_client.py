@@ -14,6 +14,10 @@ import RNS
 from rfsh_common import APP_NAMESPACE, APP_ROLE, dump_message, load_message
 
 
+ANSI_GRAY = "\033[90m"
+ANSI_RESET = "\033[0m"
+
+
 def now_ms() -> int:
     return int(time.time() * 1000)
 
@@ -71,6 +75,13 @@ class RfshClient:
 
     def _log(self, msg: str) -> None:
         print(msg, flush=True)
+
+    def _log_muted(self, msg: str) -> None:
+        # Respect NO_COLOR, and only emit ANSI color in interactive terminals.
+        if os.getenv("NO_COLOR") or not sys.stdout.isatty():
+            self._log(msg)
+            return
+        self._log(f"{ANSI_GRAY}{msg}{ANSI_RESET}")
 
     def _on_announce(self, destination_hash, announced_identity, _app_data):
         if self.destination_seen.is_set():
@@ -141,7 +152,7 @@ class RfshClient:
         started = now_ms()
         packet = RNS.Packet(self.link, encoded)
         packet.send()
-        self._log(f"[tx {tx_bytes} bytes]")
+        self._log_muted(f"[tx {tx_bytes} bytes]")
         if not pending.done.wait(self.timeout):
             with self.lock:
                 self.pending.pop(req_id, None)
@@ -151,11 +162,11 @@ class RfshClient:
         rx_bytes = len(response.encode("utf-8"))
         with self.lock:
             self.pending.pop(req_id, None)
-        self._log(f"[rx {rx_bytes} bytes, {elapsed/1000:.1f}s]")
+        self._log_muted(f"[rx {rx_bytes} bytes, {elapsed/1000:.1f}s]")
         return response
 
     def repl(self):
-        prompt = "rfsh://node> "
+        prompt = "ben@uugnet-rf> "
         while self.running:
             try:
                 raw = input(prompt)

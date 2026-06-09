@@ -14,6 +14,7 @@ Usage:
 Optional tuning flags:
   --auto-port         auto-detect likely RNode serial port
   --prefer <string>   prefer auto-detect matches containing this text
+  --allow-unbonded-ble  include allow_unbonded_ble = Yes
   --frequency <hz>    default: 915000000
   --bandwidth <hz>    default: 125000
   --txpower <dbm>     default: 17
@@ -27,6 +28,7 @@ IF_NAME=""
 PORT=""
 AUTO_PORT="0"
 PREFER=""
+ALLOW_UNBONDED_BLE="0"
 FREQ="915000000"
 BW="125000"
 TXP="17"
@@ -51,6 +53,10 @@ while [[ $# -gt 0 ]]; do
     --prefer)
       PREFER="${2:-}"
       shift 2
+      ;;
+    --allow-unbonded-ble)
+      ALLOW_UNBONDED_BLE="1"
+      shift
       ;;
     --frequency)
       FREQ="${2:-}"
@@ -155,6 +161,12 @@ if [[ -f "$CONFIG_PATH" && "$AUTO_YES" != "1" ]]; then
   fi
 fi
 
+if [[ "$PORT" == ble://* && "$ALLOW_UNBONDED_BLE" != "1" ]]; then
+  # For macOS CoreBluetooth workflows, bonded state is often unavailable
+  # to non-UI clients, so default this on for BLE ports.
+  ALLOW_UNBONDED_BLE="1"
+fi
+
 cat > "$CONFIG_PATH" <<EOF
 [reticulum]
 enable_transport = No
@@ -171,6 +183,15 @@ loglevel = 4
     type = RNodeInterface
     enabled = Yes
     port = ${PORT}
+EOF
+
+if [[ "$ALLOW_UNBONDED_BLE" == "1" ]]; then
+cat >> "$CONFIG_PATH" <<EOF
+    allow_unbonded_ble = Yes
+EOF
+fi
+
+cat >> "$CONFIG_PATH" <<EOF
     frequency = ${FREQ}
     bandwidth = ${BW}
     txpower = ${TXP}
@@ -182,6 +203,9 @@ echo "Wrote $CONFIG_PATH"
 echo "Interface: $IF_NAME"
 echo "Port:      $PORT"
 echo "Profile:   freq=$FREQ bw=$BW sf=$SF cr=$CR tx=$TXP"
+if [[ "$ALLOW_UNBONDED_BLE" == "1" ]]; then
+  echo "BLE:       allow_unbonded_ble=Yes"
+fi
 echo
 echo "Next:"
 echo "  pkill rnsd || true"

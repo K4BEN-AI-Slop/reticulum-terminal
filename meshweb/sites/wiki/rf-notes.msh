@@ -1,0 +1,10 @@
+%main
+  %h1 rf notes
+  %p this is a starter page for field notes.
+  %ul
+    %li sf7/bw125/cr5 for responsive desk demos
+    %li sf8 if packets start dropping
+    %li keep both nodes close for first link-up checks
+  %p
+    %a(href="/wiki/") back to wiki index
+

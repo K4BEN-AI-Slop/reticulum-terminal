@@ -154,7 +154,7 @@ def parse_args():
         help="Announce interval in seconds when at least one client is connected",
     )
     parser.add_argument("--node-name", default="ben-pi-rnode", help="Node name shown in id/node commands")
-    parser.add_argument("--node-site", default="Arlington Mesh Lab", help="Node site shown in id/node commands")
+    parser.add_argument("--node-site", default="Pi RNode", help="Node site shown in id/node commands")
     return parser.parse_args()
 
 

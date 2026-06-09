@@ -87,6 +87,9 @@ scripts/apply_reticulum_config.sh --name "T-Echo RNode" --auto-port --yes
 
 # Auto-detect with preference hint
 scripts/apply_reticulum_config.sh --name "Heltec V4 RNode" --auto-port --prefer "heltec" --yes
+
+# BLE target (enables allow_unbonded_ble automatically)
+scripts/apply_reticulum_config.sh --name "T-Echo RNode" --port "ble://RNode 4B44" --yes
 ```
 
 Edit the `port` on each machine:
@@ -208,4 +211,39 @@ exit
 - `clear` and `exit` are handled safely by the client.
 - No command executes arbitrary shell input.
 - If startup is flaky, keep both radios close and try SF7/SF8 first.
+
+## Mesh Web (super simple)
+
+This repo now includes a tiny filesystem web/wiki server at `meshweb/server.py`.
+
+- content root: `meshweb/sites`
+- page extension: `.msh` (condensed HTML-like format)
+- links can target files or directories (e.g. `/wiki/`, `/wiki/rf-notes`)
+- directory browsing works when no `index.msh` exists
+
+Run it:
+
+```bash
+source ~/rns-venv/bin/activate
+python3 meshweb/server.py --host 127.0.0.1 --port 8080
+```
+
+Open: `http://127.0.0.1:8080`
+
+### `.msh` quick syntax
+
+- `%tag text` -> element with inline text
+- `%tag(attr=value key="quoted value") text` -> element with attributes
+- indent two spaces to nest children
+- `| text` -> plain text node
+- `# comment` -> ignored
+
+Example:
+
+```text
+%main
+  %h1 hello
+  %p cute tiny page
+  %a(href="/wiki/") open wiki
+```
 

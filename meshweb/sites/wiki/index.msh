@@ -1,0 +1,10 @@
+%main
+  %h1 uugnet wiki
+  %p quick links:
+  %ul
+    %li
+      %a(href="/") home
+    %li
+      %a(href="/wiki/rf-notes") rf notes
+  %p add new pages as files in this folder and link them.
+
