@@ -247,3 +247,37 @@ Example:
   %a(href="/wiki/") open wiki
 ```
 
+## Mesh Web Over Reticulum RF
+
+This mode serves pages over the RF Reticulum link (not local TCP between hosts).
+
+### Pi (server side)
+
+Keep `rnsd` running, then:
+
+```bash
+source ~/rns-venv/bin/activate
+python3 meshweb/rf_server.py --root meshweb/sites --announce-interval 3
+```
+
+It prints a destination hash, for example:
+
+```text
+[MESHWEB-SRV] destination: 275be3c723195f2aad9c0f24f6656669
+```
+
+### Laptop (browser side)
+
+Keep `rnsd` running, then:
+
+```bash
+source ~/rns-venv/bin/activate
+python3 meshweb/rf_browser.py 275be3c723195f2aad9c0f24f6656669 --host 127.0.0.1 --port 8090
+```
+
+Open your browser at:
+
+`http://127.0.0.1:8090`
+
+Now every page request is proxied over the Reticulum link to the Pi file server.
+
